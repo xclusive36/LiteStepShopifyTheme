@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded',function(){
   if(focusable) focusable.focus();
   // trap focus
   document.addEventListener('focus', trapFocus, true);
+  // add keyboard left/right handlers for carousel navigation
+  modal.__arrowHandler = function(e){
+    const c = modal.__carousel;
+    if(!c) return;
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); if(typeof c.prev === 'function') c.prev(); }
+    if(e.key === 'ArrowRight'){ e.preventDefault(); if(typeof c.next === 'function') c.next(); }
+  };
+  document.addEventListener('keydown', modal.__arrowHandler);
   }
 
   function closeModal(){
@@ -19,6 +27,8 @@ document.addEventListener('DOMContentLoaded',function(){
     // restore focus
     if(modal.__previousActive) modal.__previousActive.focus();
     document.removeEventListener('focus', trapFocus, true);
+  // remove arrow key handler if present
+  if(modal && modal.__arrowHandler) document.removeEventListener('keydown', modal.__arrowHandler);
   }
 
   function trapFocus(e){
@@ -52,6 +62,14 @@ document.addEventListener('DOMContentLoaded',function(){
         img.loading = 'lazy';
         img.className = 'fade-in';
         media.appendChild(img);
+        // mark active thumbnail
+        const thumbsEl = document.getElementById('quickview-thumbs');
+        if(thumbsEl){
+          Array.from(thumbsEl.children).forEach((b, idx)=>{
+            if(idx === i){ b.setAttribute('aria-current','true'); b.classList.add('active-thumb'); }
+            else { b.removeAttribute('aria-current'); b.classList.remove('active-thumb'); }
+          });
+        }
       };
       showImage(0);
       const prev = document.querySelector('.carousel-prev');
@@ -60,6 +78,48 @@ document.addEventListener('DOMContentLoaded',function(){
         prev.removeAttribute('aria-hidden'); next.removeAttribute('aria-hidden');
         prev.onclick = ()=>{ index = (index-1+product.images.length)%product.images.length; showImage(index); };
         next.onclick = ()=>{ index = (index+1)%product.images.length; showImage(index); };
+      }
+      // expose carousel controls on the modal for keyboard handler
+      const modal = document.getElementById('quickview-modal');
+      if(modal){
+        modal.__carousel = {
+          next: ()=>{ index = (index+1)%product.images.length; showImage(index); },
+          prev: ()=>{ index = (index-1+product.images.length)%product.images.length; showImage(index); },
+          setIndex: (i)=>{ index = i % product.images.length; showImage(index); }
+        };
+        // add touch/swipe support scoped to this modal
+        (function attachSwipe(){
+          let startX = null; let moved = false;
+          const mediaEl = document.getElementById('quickview-media');
+          if(!mediaEl) return;
+          const onStart = (ev)=>{
+            const t = ev.touches ? ev.touches[0] : ev;
+            startX = t.clientX; moved = false;
+          };
+          const onMove = (ev)=>{
+            if(startX === null) return;
+            const t = ev.touches ? ev.touches[0] : ev;
+            const dx = t.clientX - startX;
+            if(Math.abs(dx) > 10) moved = true;
+          };
+          const onEnd = (ev)=>{
+            if(!moved || startX === null) { startX = null; return; }
+            const t = (ev.changedTouches && ev.changedTouches[0]) || ev;
+            const dx = t.clientX - startX;
+            if(Math.abs(dx) > 30){
+              if(dx < 0 && modal.__carousel && modal.__carousel.next) modal.__carousel.next();
+              if(dx > 0 && modal.__carousel && modal.__carousel.prev) modal.__carousel.prev();
+            }
+            startX = null; moved = false;
+          };
+          mediaEl.addEventListener('touchstart', onStart, {passive:true});
+          mediaEl.addEventListener('touchmove', onMove, {passive:true});
+          mediaEl.addEventListener('touchend', onEnd);
+          // pointer events fallback
+          mediaEl.addEventListener('pointerdown', onStart);
+          mediaEl.addEventListener('pointermove', onMove);
+          mediaEl.addEventListener('pointerup', onEnd);
+        })();
       }
       // render thumbnails
       const thumbs = document.getElementById('quickview-thumbs');
@@ -72,6 +132,8 @@ document.addEventListener('DOMContentLoaded',function(){
           const im = document.createElement('img'); im.src = src; im.alt = product.title + ' thumbnail ' + (idx+1);
           btn.appendChild(im);
           btn.onclick = ()=>{ index = idx; showImage(index); };
+          // keyboard accessibility for thumbnails
+          btn.onkeydown = (ev)=>{ if(ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); index = idx; showImage(index); } };
           thumbs.appendChild(btn);
         });
         thumbs.removeAttribute('aria-hidden');
