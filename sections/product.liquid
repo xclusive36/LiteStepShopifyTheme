@@ -2,9 +2,9 @@
   <div class="product-grid">
     <div class="product-media">
       {% if section.settings.image != blank %}
-        <img src="{{ section.settings.image | img_url: 'master' }}" alt="{{ product.title }}">
+        <img src="{{ section.settings.image | image_url: width: 1200, height: 800 }}" alt="{{ product.title }}" width="1200" height="800" loading="eager">
       {% else %}
-        <img src="{{ 'placeholder.jpg' | asset_url }}" alt="{{ product.title }}">
+        <img src="{{ 'placeholder.jpg' | asset_url }}" alt="{{ product.title }}" width="1200" height="800" loading="eager">
       {% endif %}
     </div>
     <div class="product-info">
@@ -29,13 +29,20 @@
   </div>
 
   {% schema %}
-  {
-    "name": "Product",
-    "settings": [
-      { "type": "image_picker", "id": "image", "label": "Product image (fallback)" }
-    ],
-    "blocks": [],
-    "presets": [{ "name": "Product" }]
-  }
-  {% endschema %}
-</section>
+{
+  "name": "Product",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Product image"
+    }
+  ],
+  "blocks": [],
+  "presets": [
+    {
+      "name": "Product"
+    }
+  ]
+}
+{% endschema %}

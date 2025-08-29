@@ -5,7 +5,7 @@
       {% for product in collection.products %}
         <article class="product-card">
           <a href="{{ product.url }}">
-            <img src="{{ product.featured_image | img_url: '300x' }}" alt="{{ product.title }}">
+            <img src="{{ product.featured_image | image_url: width: 300, height: 300 }}" alt="{{ product.title }}" width="300" height="300" loading="lazy">
             <h3>{{ product.title }}</h3>
           </a>
           <button class="quickview-button" data-quickview-trigger data-handle="{{ product.handle }}">Quickview</button>
@@ -20,7 +20,7 @@
           data.slice(0,3).forEach(p=>{
             const article = document.createElement('article');
             article.className = 'product-card';
-            article.innerHTML = `<img src="${p.images[0]}" alt="${p.title}"><h3>${p.title}</h3><button class="quickview-button" data-quickview-trigger data-handle="${p.handle}">Quickview</button>`;
+            article.innerHTML = `<img src="${p.images[0]}" alt="${p.title}" width="300" height="300" loading="lazy"><h3>${p.title}</h3><button class="quickview-button" data-quickview-trigger data-handle="${p.handle}">Quickview</button>`;
             container.appendChild(article);
           });
         }).catch(()=>{});
@@ -29,6 +29,14 @@
   </div>
 
   {% schema %}
-  { "name": "Collection", "settings": [], "presets": [{ "name": "Collection" }] }
-  {% endschema %}
+{
+  "name": "Collection",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Collection"
+    }
+  ]
+}
+{% endschema %}
 </section>
