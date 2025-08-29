@@ -1,6 +1,17 @@
 <div id="quickview-modal" class="modal" aria-hidden="true">
   <div class="modal-inner" role="dialog" aria-modal="true">
     <button class="modal-close" aria-label="Close">×</button>
-    <div id="quickview-content">Loading…</div>
+    <div id="quickview-content" class="quickview-content">
+      <div class="quickview-grid">
+        <div class="quickview-media" id="quickview-media">Loading…</div>
+        <div class="quickview-meta">
+          <h3 id="quickview-title"></h3>
+          <div id="quickview-price"></div>
+          <div id="quickview-variants"></div>
+          <button class="add-to-cart-button" id="quickview-add" aria-live="polite">Add to cart</button>
+          <div id="quickview-description" class="quickview-description"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
