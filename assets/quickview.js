@@ -46,9 +46,9 @@
 
   function populateQuickview(product, handle){
     if(!product) return;
-    document.getElementById('quickview-title').textContent = product.title;
-    document.getElementById('quickview-price').textContent = (product.price/100).toFixed(2);
-    document.getElementById('quickview-description').innerHTML = product.description || '';
+    const titleEl = document.getElementById('quickview-title'); if(titleEl) titleEl.textContent = product.title;
+    const priceEl = document.getElementById('quickview-price'); if(priceEl) priceEl.textContent = (product.price/100).toFixed(2);
+    const descEl = document.getElementById('quickview-description'); if(descEl) descEl.innerHTML = product.description || '';
 
     const media = document.getElementById('quickview-media');
     if(media) media.innerHTML = '';

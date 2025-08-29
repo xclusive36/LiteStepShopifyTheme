@@ -5,11 +5,13 @@
   "scripts": {
   "lint:js": "eslint \"assets/**/*.js\"",
   "test": "jest --runInBand",
+  "test:e2e": "playwright test",
   "check:ci": "echo \"Theme Check runs in CI (use GitHub Actions).\""
   },
   "devDependencies": {
   "eslint": "^8.57.1",
   "jest": "^29.7.0",
-  "jest-environment-jsdom": "^29.7.0"
+  "jest-environment-jsdom": "^29.7.0",
+  "@playwright/test": "^1.44.0"
   }
 }

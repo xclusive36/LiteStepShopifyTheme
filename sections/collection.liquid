@@ -1,0 +1,42 @@
+<section id="collection-section" class="collection-section">
+  <h2>{{ collection.title }}</h2>
+  <div class="grid">
+    {% if collection.products_count > 0 %}
+      {% for product in collection.products %}
+        <article class="product-card">
+          <a href="{{ product.url }}">
+            <img src="{{ product.featured_image | image_url: width: 300, height: 300 }}" alt="{{ product.title }}" width="300" height="300" loading="lazy">
+            <h3>{{ product.title }}</h3>
+          </a>
+          <button class="quickview-button" data-quickview-trigger data-handle="{{ product.handle }}">Quickview</button>
+        </article>
+      {% endfor %}
+    {% else %}
+      {% comment %} Fallback: render 3 demo product cards using demo JSON asset {% endcomment %}
+      {% assign demo = 'demo-products.json' | asset_url %}
+      <script>
+        fetch("{{ demo }}").then(r=>r.json()).then(data=>{
+          const container = document.currentScript.parentElement.querySelector('.grid');
+          data.slice(0,3).forEach(p=>{
+            const article = document.createElement('article');
+            article.className = 'product-card';
+            article.innerHTML = `<img src="${p.images[0]}" alt="${p.title}" width="300" height="300" loading="lazy"><h3>${p.title}</h3><button class="quickview-button" data-quickview-trigger data-handle="${p.handle}">Quickview</button>`;
+            container.appendChild(article);
+          });
+        }).catch(()=>{});
+      </script>
+    {% endif %}
+  </div>
+
+  {% schema %}
+{
+  "name": "Collection",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Collection"
+    }
+  ]
+}
+{% endschema %}
+</section>

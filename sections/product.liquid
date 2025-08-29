@@ -1,0 +1,48 @@
+<section id="product-section" class="product-section">
+  <div class="product-grid">
+    <div class="product-media">
+      {% if section.settings.image != blank %}
+        <img src="{{ section.settings.image | image_url: width: 1200, height: 800 }}" alt="{{ product.title }}" width="1200" height="800" loading="eager">
+      {% else %}
+        <img src="{{ 'placeholder.jpg' | asset_url }}" alt="{{ product.title }}" width="1200" height="800" loading="eager">
+      {% endif %}
+    </div>
+    <div class="product-info">
+      <h1>{{ product.title }}</h1>
+      <div class="product-price">{{ product.price | money }}</div>
+      {% if product.available %}
+        <form id="AddToCartForm">
+          {% if product.variants.size > 1 %}
+            <label for="ProductSelect">Variant</label>
+            <select id="ProductSelect" name="id">
+              {% for v in product.variants %}
+                <option value="{{ v.id }}">{{ v.title }} - {{ v.price | money }}</option>
+              {% endfor %}
+            </select>
+          {% endif %}
+          <button type="button" data-add-to-cart>Add to cart</button>
+        </form>
+      {% else %}
+        <div class="unavailable">Sold out</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% schema %}
+{
+  "name": "Product",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Product image"
+    }
+  ],
+  "blocks": [],
+  "presets": [
+    {
+      "name": "Product"
+    }
+  ]
+}
+{% endschema %}
