@@ -17,7 +17,9 @@
 
     {% section 'footer' %}
 
-    <script src="{{ 'scripts.js' | asset_url }}" defer></script>
+  {% render 'quickview' %}
+  {% render 'cart-drawer' %}
+  <script src="{{ 'scripts.js' | asset_url }}" defer></script>
     {{ content_for_footer }}
   </body>
 </html>

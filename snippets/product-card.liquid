@@ -6,4 +6,6 @@
     <h3>{{ product.title }}</h3>
     <p class="price">{{ product.price | money }}</p>
   </a>
+  <button class="quickview-button" data-handle="{{ product.handle }}" type="button">Quick view</button>
+  <button class="add-to-cart-button" data-variant-id="{{ product.variants.first.id }}" type="button">Add</button>
 </article>
