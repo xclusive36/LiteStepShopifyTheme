@@ -1,0 +1,67 @@
+name: E2E tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      preview_product:
+        description: 'Optional product path to run realistic E2E (e.g. /products/handle)'
+        required: false
+
+jobs:
+  playwright-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Install Shopify CLI (deb)
+        run: |
+          set -e
+          sudo apt-get update -y
+          sudo apt-get install -y wget apt-transport-https ca-certificates gnupg
+          wget -qO - https://apt.shopify.com/shopify-cli.gpg | sudo apt-key add -
+          echo "deb [arch=amd64] https://apt.shopify.com/ stable main" | sudo tee /etc/apt/sources.list.d/shopify-cli.list
+          sudo apt-get update -y
+          sudo apt-get install -y shopify-cli
+        continue-on-error: true
+
+      - name: Start theme preview (background)
+        # Use package script which centralizes how to start the preview; ensure SHOPIFY_STORE secret is present
+        run: |
+          npm run preview &
+        env:
+          SHOPIFY_API_KEY: ${{ secrets.SHOPIFY_API_KEY }}
+          SHOPIFY_API_SECRET: ${{ secrets.SHOPIFY_API_SECRET }}
+          SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+
+      - name: Wait for preview
+        run: |
+          for i in {1..30}; do curl -sSf http://127.0.0.1:9292 && break || sleep 1; done
+
+      - name: Run Playwright E2E
+        run: |
+          npm run e2e:ci
+
+      - name: Realistic E2E (optional)
+        if: ${{ github.event.inputs.preview_product != '' }}
+        run: |
+          PREVIEW_PRODUCT="${{ github.event.inputs.preview_product }}" PREVIEW_URL="http://127.0.0.1:9292" RUN_E2E=1 npx playwright test --project=chromium e2e/smoke.spec.js --reporter=list
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results/**
+            playwright-report/**

@@ -1,7 +1,18 @@
 <article class="product-card">
   <a href="{{ product.url }}">
     {% if product.featured_image %}
-      <img src="{{ product.featured_image | image_url: '400x' }}" alt="{{ product.title | escape }}" width="400" height="400" loading="lazy" />
+      {%- assign img_320 = product.featured_image | image_url: width: 320 -%}
+      {%- assign img_480 = product.featured_image | image_url: width: 480 -%}
+      {%- assign img_800 = product.featured_image | image_url: width: 800 -%}
+      <img
+        src="{{ img_480 }}"
+        srcset="{{ img_320 }} 320w, {{ img_480 }} 480w, {{ img_800 }} 800w"
+        sizes="(max-width: 600px) 100vw, 400px"
+        alt="{{ product.title | escape }}"
+        width="400"
+        height="400"
+        loading="lazy"
+      />
     {% endif %}
     <h3>{{ product.title }}</h3>
     <p class="price">{{ product.price | money }}</p>

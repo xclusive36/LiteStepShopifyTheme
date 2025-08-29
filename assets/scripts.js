@@ -4,14 +4,18 @@ document.addEventListener('DOMContentLoaded',function(){
   // modules will be used to override local implementations later (if available)
 
   let openModal = function(){
-    const modal = document.getElementById('quickview-modal');
-    modal.setAttribute('aria-hidden','false');
+  const modal = document.getElementById('quickview-modal');
+  modal.setAttribute('aria-hidden','false');
+  // hide main content to assist screen readers (apply to common main selectors)
+  const mains = document.querySelectorAll('#MainContent, main[role="main"], main');
+  mains.forEach(m=>m.setAttribute('aria-hidden','true'));
   // focus management: save active element and move focus into modal
   modal.__previousActive = document.activeElement;
-  const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  if(focusable) focusable.focus();
-  // trap focus
-  document.addEventListener('focus', trapFocus, true);
+  const focusableEls = modal.querySelectorAll('a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])');
+  modal.__focusable = Array.prototype.slice.call(focusableEls || []);
+  if(modal.__focusable.length) modal.__focusable[0].focus();
+  // trap focus using a keydown handler for Tab
+  document.addEventListener('keydown', trapFocusKeydown);
   // add keyboard left/right handlers for carousel navigation
   modal.__arrowHandler = function(e){
     const c = modal.__carousel;
@@ -25,20 +29,26 @@ document.addEventListener('DOMContentLoaded',function(){
   let closeModal = function(){
     const modal = document.getElementById('quickview-modal');
     modal.setAttribute('aria-hidden','true');
-    // restore focus
+    // restore focus and reveal main content
+  const mains = document.querySelectorAll('#MainContent, main[role="main"], main');
+  mains.forEach(m=>m.removeAttribute('aria-hidden'));
     if(modal.__previousActive) modal.__previousActive.focus();
-    document.removeEventListener('focus', trapFocus, true);
+    document.removeEventListener('keydown', trapFocusKeydown);
   // remove arrow key handler if present
   if(modal && modal.__arrowHandler) document.removeEventListener('keydown', modal.__arrowHandler);
   }
 
-  let trapFocus = function(e){
+  // (previous focusin handler removed) we now use keydown-based tab trapping via trapFocusKeydown
+
+  let trapFocusKeydown = function(e){
+    if(e.key !== 'Tab') return;
     const modal = document.getElementById('quickview-modal');
     if(!modal || modal.getAttribute('aria-hidden') === 'true') return;
-    if(!modal.contains(e.target)){
-      e.stopPropagation();
-      modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])').focus();
-    }
+    const focusable = modal.__focusable || [];
+    if(focusable.length === 0) { e.preventDefault(); return; }
+    const first = focusable[0]; const last = focusable[focusable.length-1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
   }
 
   // helper to populate quickview modal from a product object
@@ -167,7 +177,9 @@ document.addEventListener('DOMContentLoaded',function(){
       try{ addBtn.dataset.product = JSON.stringify(product); }catch(e){ console.warn('Could not stringify product for dataset', e); }
     }
 
-    openModal();
+  // ensure main content hidden (defensive for test envs where elements may be appended differently)
+  const main = document.getElementById('MainContent'); if(main) main.setAttribute('aria-hidden','true');
+  openModal();
   }
 
   document.body.addEventListener('click',function(e){
@@ -249,6 +261,7 @@ document.addEventListener('DOMContentLoaded',function(){
       container.innerHTML = '<p>Your cart is empty</p>';
       document.getElementById('cart-subtotal').textContent = '';
   const announcer = document.getElementById('cart-announcer'); if(announcer) announcer.textContent = 'Your cart is empty.';
+  const count = document.getElementById('cart-count'); if(count) count.textContent = '(0)';
       return;
     }
     container.innerHTML = '';
@@ -263,6 +276,9 @@ document.addEventListener('DOMContentLoaded',function(){
     });
     document.getElementById('cart-subtotal').textContent = 'Subtotal: $' + (cart.total_price/100).toFixed(2);
   const announcer = document.getElementById('cart-announcer'); if(announcer) announcer.textContent = cart.items.length + ' items in cart. Subtotal ' + (cart.total_price/100).toFixed(2);
+  const counts = document.querySelectorAll('#cart-count');
+  counts.forEach(n=>{ n.textContent = '(' + cart.items.length + ')'; });
+  const single = document.getElementById('cart-count'); if(single) single.textContent = '(' + cart.items.length + ')';
   }
 
   let refreshCartDrawer = function(){
@@ -305,18 +321,20 @@ document.addEventListener('DOMContentLoaded',function(){
   // Attempt to override local implementations with the modular versions if available
   try{
     var _cart = null;
-    try{ _cart = require('./lib/cart'); }catch(e){ _cart = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
+  try{ _cart = require('./cart'); }catch(e){ _cart = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
     if(_cart){ if(_cart.renderCart) renderCart = _cart.renderCart; if(_cart.refreshCartDrawer) refreshCartDrawer = _cart.refreshCartDrawer; if(_cart.updateCartLine) updateCartLine = _cart.updateCartLine; if(_cart.renderPageCart) renderPageCart = _cart.renderPageCart; }
-    var _quick = null;
-    try{ _quick = require('./lib/quickview'); }catch(e){ _quick = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
-    if(_quick){ if(_quick.openModal) openModal = _quick.openModal; if(_quick.closeModal) closeModal = _quick.closeModal; if(_quick.populateQuickview) populateQuickview = _quick.populateQuickview; if(_quick.trapFocus) trapFocus = _quick.trapFocus; }
+  var _quick = null;
+  try{ _quick = require('./quickview'); }catch(e){ _quick = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
+  // Do not allow external quickview modules to overwrite core modal lifecycle handlers
+  // (openModal/closeModal/populateQuickview/trapFocusKeydown) to keep accessibility behavior consistent.
+  if(_quick){ if(_quick.trapFocusKeydown) trapFocusKeydown = _quick.trapFocusKeydown; }
   }catch(e){ /* ignore module loading errors in environments without require */ }
 
   // initial cart render — try module then fall back
   try {
     if (typeof require === 'function') {
       let c;
-      try { c = require('./lib/cart'); } catch (err) { c = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
+  try { c = require('./cart'); } catch (err) { c = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
       if (c && typeof c.refreshCartDrawer === 'function') c.refreshCartDrawer();
       else refreshCartDrawer();
     } else {

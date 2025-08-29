@@ -27,6 +27,10 @@
     });
     const subtotalEl = document.getElementById('cart-subtotal'); if(subtotalEl) subtotalEl.textContent = 'Subtotal: $' + (cart.total_price/100).toFixed(2);
     const announcer = document.getElementById('cart-announcer'); if(announcer) announcer.textContent = cart.items.length + ' items in cart. Subtotal ' + (cart.total_price/100).toFixed(2);
+  // update any cart-count placeholders
+  const counts = document.querySelectorAll('#cart-count');
+  counts.forEach(n=>{ n.textContent = '(' + cart.items.length + ')'; });
+  const single = document.getElementById('cart-count'); if(single) single.textContent = '(' + cart.items.length + ')';
   }
 
   function refreshCartDrawer(){
