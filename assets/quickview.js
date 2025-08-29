@@ -11,7 +11,10 @@
   function openModal(){
     const modal = document.getElementById('quickview-modal');
     if(!modal) return;
-    modal.setAttribute('aria-hidden','false');
+  modal.setAttribute('aria-hidden','false');
+  // hide main content to assist screen readers when quickview is open
+  const mains = document.querySelectorAll('#MainContent, main[role="main"], main');
+  mains.forEach(m => m.setAttribute('aria-hidden', 'true'));
     modal.__previousActive = document.activeElement;
     const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     if(focusable) focusable.focus();
@@ -29,6 +32,9 @@
     const modal = document.getElementById('quickview-modal');
     if(!modal) return;
     modal.setAttribute('aria-hidden','true');
+  // restore main content to assistive tech
+  const mains = document.querySelectorAll('#MainContent, main[role="main"], main');
+  mains.forEach(m => m.removeAttribute('aria-hidden'));
     if(modal.__previousActive) modal.__previousActive.focus();
     document.removeEventListener('focus', trapFocus, true);
     if(modal && modal.__arrowHandler) document.removeEventListener('keydown', modal.__arrowHandler);

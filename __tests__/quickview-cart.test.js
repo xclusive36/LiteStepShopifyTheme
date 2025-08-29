@@ -25,12 +25,17 @@ beforeEach(()=>{
     <div id="page-cart-subtotal"></div>
   `;
 
+  // add main content and cart-count used by accessibility helpers
+  const main = document.createElement('main'); main.id = 'MainContent'; document.body.appendChild(main);
+  const headerCount = document.createElement('span'); headerCount.id = 'cart-count'; headerCount.textContent = '(0)'; document.body.appendChild(headerCount);
+
   // Ensure the module runs its DOMContentLoaded handler in tests.
   // Clear cache so require will re-run the module per test.
   const modPath = require.resolve('../assets/scripts.js');
   delete require.cache[modPath];
-  // Provide a minimal fetch mock used by refreshCartDrawer
-  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async ()=>({ items: [], total_price: 0 }) });
+  // Provide a fetch mock that does not resolve immediately so the initial background refresh
+  // (triggered during module initialization) doesn't overwrite explicit test renders.
+  global.fetch = jest.fn().mockImplementation(() => new Promise(()=>{}));
   require('../assets/scripts.js');
   // Dispatch DOMContentLoaded so the script's listener executes and attaches window.LiteStep
   document.dispatchEvent(new Event('DOMContentLoaded'));
@@ -49,6 +54,8 @@ test('populateQuickview fills modal and thumbnails', ()=>{
   expect(thumbs.children.length).toBe(p.images.length);
   // thumbnails should be visible
   expect(thumbs.getAttribute('aria-hidden')).toBe(null);
+  // main should be hidden when modal open
+  expect(document.getElementById('MainContent').getAttribute('aria-hidden')).toBe('true');
 });
 
 test('renderCart shows items and updates announcer', ()=>{
@@ -67,4 +74,6 @@ test('renderCart shows items and updates announcer', ()=>{
   expect(subtotal).toMatch('Subtotal: $55.00');
   const announcer = document.getElementById('cart-announcer').textContent;
   expect(announcer).toMatch('2 items in cart');
+  // cart count updated
+  expect(document.getElementById('cart-count').textContent).toBe('(2)');
 });
