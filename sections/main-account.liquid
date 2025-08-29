@@ -1,0 +1,16 @@
+{% schema %}
+{
+  "name": "Account main",
+  "settings": [],
+  "presets": [
+    { "name": "Account" }
+  ]
+}
+{% endschema %}
+
+<section class="account-section">
+  <div class="account-inner">
+    <!-- Minimal placeholder for customer account templates -->
+    <div class="account-content">{% if template.name %}{{ template.name }}{% endif %}</div>
+  </div>
+</section>

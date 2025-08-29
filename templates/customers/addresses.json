@@ -1,4 +1,8 @@
 {
-  "sections": {},
-  "order": []
+  "sections": {
+    "main-account": {}
+  },
+  "order": [
+    "main-account"
+  ]
 }
