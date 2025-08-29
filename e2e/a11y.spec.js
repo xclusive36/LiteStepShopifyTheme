@@ -35,10 +35,13 @@ test('quickview has proper ARIA and no critical a11y violations', async ({ page 
         try {
           const parent = await handle.evaluateHandle(el => el.parentElement);
           if (parent) {
-            await parent.asElement().click({ force: true }).catch(() => {});
-            return true;
+            const parentEl = parent.asElement();
+            if (parentEl) {
+              await parentEl.click({ force: true }).catch(() => {});
+              return true;
+            }
           }
-        } catch (e) {}
+        } catch (e) { console.debug('a11y: resilientClick parent click failed', e && e.message); }
       }
     }
     return false;
