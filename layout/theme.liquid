@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>{{ page_title }} - {{ shop.name }}</title>
+    {{ content_for_header }}
+    <link rel="stylesheet" href="{{ 'styles.css' | asset_url }}">
+  </head>
+  <body>
+    {% section 'header' %}
+
+    <main id="MainContent" role="main">
+      {{ content_for_layout }}
+    </main>
+
+    {% section 'footer' %}
+
+    <script src="{{ 'scripts.js' | asset_url }}" defer></script>
+    {{ content_for_footer }}
+  </body>
+</html>

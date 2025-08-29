@@ -1,0 +1,38 @@
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo" },
+    { "type": "text", "id": "logo_alt", "label": "Logo alt text", "default": "{{ shop.name }}" }
+  ],
+  "presets": [{ "name": "Header" }]
+}
+{% endschema %}
+
+<header class="site-header" role="banner">
+  <div class="header-inner">
+    <div class="site-logo">
+      <a href="/">
+        {% if section.settings.logo != blank %}
+          <img src="{{ section.settings.logo | image_url: '300x' }}" alt="{{ section.settings.logo_alt | escape }}" />
+        {% else %}
+          <span class="site-title">{{ shop.name }}</span>
+        {% endif %}
+      </a>
+    </div>
+
+    <nav class="site-nav" role="navigation" aria-label="Main menu">
+      {% if linklists.main %}
+        <ul>
+          {% for link in linklists.main.links %}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </nav>
+
+    <div class="header-actions">
+      <a href="/cart" class="cart-link">Cart</a>
+    </div>
+  </div>
+</header>

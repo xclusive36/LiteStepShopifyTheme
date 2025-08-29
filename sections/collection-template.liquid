@@ -1,0 +1,49 @@
+{% schema %}
+{
+  "name": "Collection template",
+  "settings": [
+    {"type": "select", "id": "columns", "label": "Products per row", "default": "3", "options": [
+      {"value": "1", "label": "1"},
+      {"value": "2", "label": "2"},
+      {"value": "3", "label": "3"},
+      {"value": "4", "label": "4"}
+    ]}
+  ],
+  "blocks": [],
+  "presets": [{"name": "Collection"}]
+}
+{% endschema %}
+
+<section class="collection-template">
+  {% if collection %}
+    <header class="collection-header">
+      <h1>{{ collection.title }}</h1>
+      {% if collection.description %}<div class="collection-description">{{ collection.description }}</div>{% endif %}
+    </header>
+
+    <div class="collection-grid" style="--cols: {{ section.settings.columns }};">
+      {% for product in collection.products %}
+        {% render 'product-card', product: product %}
+      {% endfor %}
+    </div>
+
+    {% paginate collection.products by 24 %}
+      {% if paginate.pages > 1 %}
+        <nav class="pagination">
+          {% if paginate.previous %}<a href="{{ paginate.previous.url }}">Previous</a>{% endif %}
+          {% for part in paginate.parts %}
+            {% if part.is_link %}
+              <a href="{{ part.url }}">{{ part.title }}</a>
+            {% else %}
+              <span aria-current="page">{{ part.title }}</span>
+            {% endif %}
+          {% endfor %}
+          {% if paginate.next %}<a href="{{ paginate.next.url }}">Next</a>{% endif %}
+        </nav>
+      {% endif %}
+    {% endpaginate %}
+
+  {% else %}
+    <p>Collection not found</p>
+  {% endif %}
+</section>

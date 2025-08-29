@@ -1,0 +1,6 @@
+---
+# Theme Check configuration
+exclude:
+  - vendor/**
+  - node_modules/**
+  - .github/**

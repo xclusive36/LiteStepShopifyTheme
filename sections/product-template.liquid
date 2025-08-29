@@ -1,0 +1,26 @@
+{% schema %}
+{
+  "name": "Product template",
+  "settings": []
+}
+{% endschema %}
+
+<section class="product-template">
+  {% if product %}
+    <h1>{{ product.title }}</h1>
+    <div class="product-gallery">
+      {% for image in product.images %}
+        {{ image | img_url: '800x' | img_tag }}
+      {% endfor %}
+    </div>
+    <div class="product-info">
+      {{ product.description }}
+      <form method="post" action="/cart/add">
+        <input type="hidden" name="id" value="{{ product.variants.first.id }}">
+        <button type="submit">Add to cart</button>
+      </form>
+    </div>
+  {% else %}
+    <p>Product not found</p>
+  {% endif %}
+</section>
