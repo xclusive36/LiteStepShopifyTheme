@@ -36,3 +36,32 @@ button:focus, a:focus, select:focus, input:focus {
 .cart-item-qty{display:flex;gap:8px;align-items:center}
 .qty-button{background:#eee;border:1px solid #ddd;padding:4px 8px;border-radius:4px}
 .remove-button{background:transparent;border:none;color:#c02424}
+
+/* visually hidden for assistive tech */
+.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+
+/* simple fade/slide animations */
+.fade-in{animation:fadeIn .18s ease-out}
+.slide-in-right{animation:slideIn .18s ease-out}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(8px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* quickview carousel */
+.quickview-media img{max-width:100%;height:auto;display:block}
+.carousel-prev,.carousel-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.4);color:#fff;border:none;padding:6px 10px;border-radius:4px}
+.carousel-prev{left:8px}
+.carousel-next{right:8px}
+
+/* thumbnail strip under quickview media */
+.quickview-thumbs{display:flex;gap:8px;margin-top:12px;align-items:center}
+.quickview-thumbs button{border:1px solid #e6e6e6;background:#fff;padding:4px;border-radius:6px}
+.quickview-thumbs img{width:56px;height:56px;object-fit:cover;border-radius:4px}
+
+/* cart item add/remove animations */
+.cart-item-added{animation:cartItemAdd .28s ease-out}
+.cart-item-removed{animation:cartItemRemove .28s ease-out}
+@keyframes cartItemAdd{from{transform:translateY(-6px);opacity:0}to{transform:none;opacity:1}}
+@keyframes cartItemRemove{from{opacity:1}to{opacity:0;transform:scale(.98)}}
+
+/* announcer visible for debugging (keeps visually-hidden accessible) */
+.visually-hidden[aria-live]{border:0;padding:0;margin:0}

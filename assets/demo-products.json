@@ -5,7 +5,7 @@
       "title": "LiteStep Tee",
       "description": "A comfy tee for early adopters.",
       "price": 1999,
-      "images": ["/assets/demo-tee-1.jpg","/assets/demo-tee-2.jpg"],
+  "images": ["/assets/demo-tee-1.svg","/assets/demo-tee-2.svg"],
       "variants": [{"id": 11111111, "title":"S","price":1999},{"id":11111112,"title":"M","price":1999}]
     },
     {
@@ -13,7 +13,7 @@
       "title": "LiteStep Mug",
       "description": "Sip in style.",
       "price": 1299,
-      "images": ["/assets/demo-mug-1.jpg"],
+  "images": ["/assets/demo-mug-1.svg"],
       "variants": [{"id": 22222221, "title":"Default","price":1299}]
     }
   ]

@@ -40,9 +40,9 @@ document.addEventListener('DOMContentLoaded',function(){
     // media
     const media = document.getElementById('quickview-media');
     media.innerHTML = '';
-    if(product.images && product.images.length){
+      if(product.images && product.images.length){
   // preload images for smoother carousel
-  product.images.forEach(src=>{ const im = new Image(); im.src = src; });
+      product.images.forEach(src=>{ const im = new Image(); im.src = src; });
       let index = 0;
       const showImage = (i)=>{
         media.innerHTML = '';
@@ -60,6 +60,21 @@ document.addEventListener('DOMContentLoaded',function(){
         prev.removeAttribute('aria-hidden'); next.removeAttribute('aria-hidden');
         prev.onclick = ()=>{ index = (index-1+product.images.length)%product.images.length; showImage(index); };
         next.onclick = ()=>{ index = (index+1)%product.images.length; showImage(index); };
+      }
+      // render thumbnails
+      const thumbs = document.getElementById('quickview-thumbs');
+      if(thumbs){
+        thumbs.innerHTML = '';
+        product.images.forEach((src, idx)=>{
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.setAttribute('role','listitem');
+          btn.className = 'quickview-thumb';
+          const im = document.createElement('img'); im.src = src; im.alt = product.title + ' thumbnail ' + (idx+1);
+          btn.appendChild(im);
+          btn.onclick = ()=>{ index = idx; showImage(index); };
+          thumbs.appendChild(btn);
+        });
+        thumbs.removeAttribute('aria-hidden');
       }
     }
 
@@ -177,7 +192,10 @@ document.addEventListener('DOMContentLoaded',function(){
     cart.items.forEach(i=>{
       const row = document.createElement('div');
       row.className = 'cart-item';
-      row.innerHTML = `<div class="cart-item-title">${i.product_title}</div><div class="cart-item-qty">${i.quantity}</div><div class="cart-item-price">${(i.line_price/100).toFixed(2)}</div>`;
+    row.innerHTML = `<div class="cart-item-title">${i.product_title}</div><div class="cart-item-qty">${i.quantity}</div><div class="cart-item-price">${(i.line_price/100).toFixed(2)}</div>`;
+    // add small highlight animation for recently added items
+    row.classList.add('cart-item-added');
+    setTimeout(()=>row.classList.remove('cart-item-added'), 400);
       container.appendChild(row);
     });
     document.getElementById('cart-subtotal').textContent = 'Subtotal: $' + (cart.total_price/100).toFixed(2);
