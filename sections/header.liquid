@@ -16,7 +16,7 @@
         {% if section.settings.logo != blank %}
           <img src="{{ section.settings.logo | image_url: '300x' }}" alt="{{ section.settings.logo_alt | escape }}" />
         {% else %}
-          <span class="site-title">{{ shop.name }}</span>
+          <img src="{{ 'logo-default.svg' | asset_url }}" alt="{{ shop.name | escape }}" />
         {% endif %}
       </a>
     </div>

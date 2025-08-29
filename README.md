@@ -17,3 +17,10 @@ How to preview locally
 
 Notes
 - This is a minimal starter scaffold. Continue by adding more sections, presets, and assets.
+
+Usage notes
+- Preview locally: run `shopify theme dev --store=404c9d-0e.myshopify.com --theme=140384927830` and open http://127.0.0.1:9292
+- Shareable preview: https://404c9d-0e.myshopify.com/?preview_theme_id=140384927830
+
+Assets
+- Default logo added at `assets/logo-default.svg` and used as a header fallback when no logo is set in the theme editor.
