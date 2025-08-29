@@ -25,7 +25,7 @@ jobs:
 
       - name: Run ESLint
         run: |
-          npx eslint assets --ext .js || true
+          npx eslint assets --ext .js
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
