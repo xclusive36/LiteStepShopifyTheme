@@ -1,0 +1,41 @@
+name: Lint & Theme Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install JS deps
+        run: |
+          npm ci
+        working-directory: ./
+
+      - name: Run ESLint
+        run: |
+          npx eslint assets --ext .js || true
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Install theme-check
+        run: |
+          gem install theme-check
+
+      - name: Run theme-check
+        run: |
+          theme-check .

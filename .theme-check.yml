@@ -1,6 +1,7 @@
 ---
 # Theme Check configuration
-exclude:
-  - vendor/**
-  - node_modules/**
-  - .github/**
+# Use `ignore_paths` instead of unsupported `exclude`
+ignore_paths:
+  - 'vendor/**'
+  - 'node_modules/**'
+  - '.github/**'
