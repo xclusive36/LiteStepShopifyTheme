@@ -1,1 +1,5 @@
-{ "current": { "announcement_text": "Free shipping over $50" } }
+{
+  "current": {
+    "announcement_text": "Free shipping over $50"
+  }
+}

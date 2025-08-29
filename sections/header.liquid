@@ -2,10 +2,23 @@
 {
   "name": "Header",
   "settings": [
-    { "type": "image_picker", "id": "logo", "label": "Logo" },
-    { "type": "text", "id": "logo_alt", "label": "Logo alt text", "default": "{{ shop.name }}" }
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo"
+    },
+    {
+      "type": "text",
+      "id": "logo_alt",
+      "label": "Logo alt text",
+      "default": "{{ shop.name }}"
+    }
   ],
-  "presets": [{ "name": "Header" }]
+  "presets": [
+    {
+      "name": "Header"
+    }
+  ]
 }
 {% endschema %}
 
@@ -14,9 +27,9 @@
     <div class="site-logo">
       <a href="/">
         {% if section.settings.logo != blank %}
-          <img src="{{ section.settings.logo | image_url: '300x' }}" alt="{{ section.settings.logo_alt | escape }}" />
+          <img src="{{ section.settings.logo | image_url: '300x' }}" alt="{{ section.settings.logo_alt | escape }}" width="300" height="60" loading="eager" />
         {% else %}
-          <img src="{{ 'logo-default.svg' | asset_url }}" alt="{{ shop.name | escape }}" />
+          <img src="{{ 'logo-default.svg' | asset_url }}" alt="{{ shop.name | escape }}" width="200" height="40" loading="eager" />
         {% endif %}
       </a>
     </div>

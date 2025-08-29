@@ -1,1 +1,6 @@
-{ "general": { "accessibility": "Accessibility", "skip_to_content": "Skip to content" } }
+{
+  "general": {
+    "accessibility": "Accessibility",
+    "skip_to_content": "Skip to content"
+  }
+}

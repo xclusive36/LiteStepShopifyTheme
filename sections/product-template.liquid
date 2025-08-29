@@ -10,7 +10,7 @@
     <h1>{{ product.title }}</h1>
     <div class="product-gallery">
       {% for image in product.images %}
-        {{ image | img_url: '800x' | img_tag }}
+        <img src="{{ image | image_url: '800x' }}" alt="{{ product.title | escape }}" width="800" height="800" loading="lazy" />
       {% endfor %}
     </div>
     <div class="product-info">

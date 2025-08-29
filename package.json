@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "lint:js": "eslint assets scripts || true",
+    "lint:js": "eslint \"assets/**/*.js\" || true",
     "check:ci": "echo \"Theme Check runs in CI (use GitHub Actions).\""
   },
   "devDependencies": {

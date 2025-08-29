@@ -1,1 +1,13 @@
-[ { "name": "Theme", "settings": [ { "type": "text", "id": "announcement_text", "label": "Announcement text", "default": "Free shipping over $50" } ] } ]
+[
+  {
+    "name": "Theme",
+    "settings": [
+      {
+        "type": "text",
+        "id": "announcement_text",
+        "label": "Announcement text",
+        "default": "Free shipping over $50"
+      }
+    ]
+  }
+]

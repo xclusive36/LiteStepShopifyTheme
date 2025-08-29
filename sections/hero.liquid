@@ -2,16 +2,36 @@
 {
   "name": "Hero",
   "settings": [
-    {"type": "image_picker", "id": "image", "label": "Background image"},
-    {"type": "text", "id": "heading", "label": "Heading", "default": "Welcome to LiteStep"},
-    {"type": "text", "id": "subheading", "label": "Subheading", "default": "Fast. Flexible. Ready."}
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Background image"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Welcome to LiteStep"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Fast. Flexible. Ready."
+    }
+  ],
+  "blocks": [],
+  "presets": [
+    {
+      "name": "Hero"
+    }
   ]
 }
 {% endschema %}
 
 <section class="hero">
   {% if section.settings.image %}
-    {{ section.settings.image | image_url | img_tag }}
+    <img src="{{ section.settings.image | image_url }}" alt="{{ section.settings.heading | escape }}" width="1400" height="600" loading="eager" />
   {% endif %}
   <div class="hero-content">
     <h1>{{ section.settings.heading }}</h1>
