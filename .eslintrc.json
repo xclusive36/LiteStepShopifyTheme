@@ -1,5 +1,11 @@
 {
   "env": { "browser": true, "node": true, "es2021": true },
+  "overrides": [
+    {
+      "files": ["**/__tests__/**", "**/*.test.js"],
+      "env": { "jest": true }
+    }
+  ],
   "extends": ["eslint:recommended"],
   "rules": {
     "no-console": "off"

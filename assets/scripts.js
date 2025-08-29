@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded',function(){
   // Minimal JS: quickview and cart drawer handlers
   console.log('LiteStep theme loaded')
+  // modules will be used to override local implementations later (if available)
 
-  function openModal(){
+  let openModal = function(){
     const modal = document.getElementById('quickview-modal');
     modal.setAttribute('aria-hidden','false');
   // focus management: save active element and move focus into modal
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded',function(){
   document.addEventListener('keydown', modal.__arrowHandler);
   }
 
-  function closeModal(){
+  let closeModal = function(){
     const modal = document.getElementById('quickview-modal');
     modal.setAttribute('aria-hidden','true');
     // restore focus
@@ -31,7 +32,7 @@ document.addEventListener('DOMContentLoaded',function(){
   if(modal && modal.__arrowHandler) document.removeEventListener('keydown', modal.__arrowHandler);
   }
 
-  function trapFocus(e){
+  let trapFocus = function(e){
     const modal = document.getElementById('quickview-modal');
     if(!modal || modal.getAttribute('aria-hidden') === 'true') return;
     if(!modal.contains(e.target)){
@@ -41,7 +42,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   // helper to populate quickview modal from a product object
-  function populateQuickview(product, handle){
+  let populateQuickview = function(product, handle){
     // populate modal fields
     document.getElementById('quickview-title').textContent = product.title;
     document.getElementById('quickview-price').textContent = (product.price/100).toFixed(2);
@@ -241,7 +242,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   });
 
-  function renderCart(cart){
+  let renderCart = function(cart){
     const container = document.getElementById('cart-items');
     if(!container) return;
     if(!cart || !cart.items || cart.items.length===0){
@@ -264,13 +265,13 @@ document.addEventListener('DOMContentLoaded',function(){
   const announcer = document.getElementById('cart-announcer'); if(announcer) announcer.textContent = cart.items.length + ' items in cart. Subtotal ' + (cart.total_price/100).toFixed(2);
   }
 
-  function refreshCartDrawer(){
+  let refreshCartDrawer = function(){
     fetch('/cart.js').then(r=>r.json()).then(cart=>{
       renderCart(cart);
     }).catch(err=>console.error(err));
   }
 
-  function updateCartLine(key, quantity){
+  let updateCartLine = function(key, quantity){
     fetch('/cart/change.js', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: key, quantity: quantity})})
       .then(r=>r.json())
       .then(cart=>{
@@ -281,7 +282,7 @@ document.addEventListener('DOMContentLoaded',function(){
       }).catch(err=>console.error(err));
   }
 
-  function renderPageCart(cart){
+  let renderPageCart = function(cart){
     const container = document.getElementById('page-cart-items');
     if(!container) return;
     container.innerHTML = '';
@@ -301,6 +302,43 @@ document.addEventListener('DOMContentLoaded',function(){
     document.getElementById('page-cart-subtotal').textContent = 'Subtotal: $' + (cart.total_price/100).toFixed(2);
   }
 
-  // initial cart render
-  refreshCartDrawer();
+  // Attempt to override local implementations with the modular versions if available
+  try{
+    var _cart = null;
+    try{ _cart = require('./lib/cart'); }catch(e){ _cart = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
+    if(_cart){ if(_cart.renderCart) renderCart = _cart.renderCart; if(_cart.refreshCartDrawer) refreshCartDrawer = _cart.refreshCartDrawer; if(_cart.updateCartLine) updateCartLine = _cart.updateCartLine; if(_cart.renderPageCart) renderPageCart = _cart.renderPageCart; }
+    var _quick = null;
+    try{ _quick = require('./lib/quickview'); }catch(e){ _quick = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
+    if(_quick){ if(_quick.openModal) openModal = _quick.openModal; if(_quick.closeModal) closeModal = _quick.closeModal; if(_quick.populateQuickview) populateQuickview = _quick.populateQuickview; if(_quick.trapFocus) trapFocus = _quick.trapFocus; }
+  }catch(e){ /* ignore module loading errors in environments without require */ }
+
+  // initial cart render — try module then fall back
+  try {
+    if (typeof require === 'function') {
+      let c;
+      try { c = require('./lib/cart'); } catch (err) { c = (typeof window !== 'undefined' && window.LiteStep) ? window.LiteStep : null; }
+      if (c && typeof c.refreshCartDrawer === 'function') c.refreshCartDrawer();
+      else refreshCartDrawer();
+    } else {
+      refreshCartDrawer();
+    }
+  } catch (e) {
+  try { refreshCartDrawer(); } catch (e) { /* fallback failed silently */ }
+  }
+
+  // Expose a small testable API when running in a browser-like environment (tests/jsdom)
+  try{
+    if(typeof window !== 'undefined'){
+      window.LiteStep = window.LiteStep || {};
+      Object.assign(window.LiteStep, {
+        openModal,
+        closeModal,
+        populateQuickview,
+        renderCart,
+        refreshCartDrawer,
+        updateCartLine,
+        renderPageCart
+      });
+    }
+  }catch(e){ /* no-op in strict environments */ }
 })
