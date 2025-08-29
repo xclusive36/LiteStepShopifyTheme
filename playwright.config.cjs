@@ -5,6 +5,12 @@ const config = {
     ignoreHTTPSErrors: true,
     video: 'retain-on-failure'
   },
-  testDir: './e2e'
+  testDir: './e2e',
+  projects: [
+    {
+      name: 'chromium',
+      use: { browserName: 'chromium' }
+    }
+  ]
 };
 module.exports = config;
