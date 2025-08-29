@@ -1,3 +1,18 @@
+{%- comment -%}
+Minimal cart drawer that listens for [data-cart-count] element updates.
+{%- endcomment -%}
+
+<div id="cart-drawer" class="cart-drawer" aria-hidden="true">
+  <div class="cart-drawer-inner">
+    <button class="cart-drawer-close" aria-label="Close cart">×</button>
+    <h3>Your cart</h3>
+    <div id="cart-items" class="cart-items"></div>
+    <div class="cart-drawer-footer">
+      <a href="/cart" class="button">View cart</a>
+      <span class="cart-count" aria-hidden="true">Items: <span data-cart-count>0</span></span>
+    </div>
+  </div>
+</div>
 <div id="cart-drawer" class="cart-drawer" aria-hidden="true" role="dialog" aria-modal="true">
   <div class="cart-inner">
     <button class="cart-close" aria-label="Close">×</button>

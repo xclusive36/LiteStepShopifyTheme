@@ -1,3 +1,31 @@
+{%- comment -%}
+Product card snippet with responsive image srcset and sizes.
+Usage: include with a `product` variable in scope.
+{%- endcomment -%}
+
+<a href="{{ product.url }}" class="product-card__link" aria-label="{{ product.title | escape }}">
+  <div class="product-card__media">
+    <picture>
+      {%- if product.featured_image -%}
+        <source
+          srcset="{{ product.featured_image | img_url: '800x' }} 800w, {{ product.featured_image | img_url: '400x' }} 400w, {{ product.featured_image | img_url: '200x' }} 200w"
+          sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw">
+        <img
+          src="{{ product.featured_image | img_url: '400x' }}"
+          alt="{{ product.title | escape }}"
+          loading="lazy"
+          class="product-card__image" />
+      {%- else -%}
+        <img src="{{ 'placeholder-400x.jpg' | asset_url }}" alt="{{ product.title | escape }}" class="product-card__image" />
+      {%- endif -%}
+    </picture>
+  </div>
+
+  <div class="product-card__meta">
+    <h3 class="product-card__title">{{ product.title }}</h3>
+    <div class="product-card__price">{{ product.price | money }}</div>
+  </div>
+</a>
 <article class="product-card">
   <a href="{{ product.url }}">
     {% if product.featured_image %}

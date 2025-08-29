@@ -1,0 +1,17 @@
+{%- comment -%}
+Simple quickview modal skeleton. Themes will hook into #quickview-modal and populate content.
+{%- endcomment -%}
+
+<div id="quickview-modal" class="quickview-modal" role="dialog" aria-hidden="true" style="display:none;">
+  <div class="quickview-inner" role="document">
+    <button class="quickview-close" aria-label="Close quickview">×</button>
+    <div id="quickview-media" class="quickview-media"></div>
+    <div class="quickview-info">
+      <h2 id="quickview-title" class="quickview-title"></h2>
+      <div id="quickview-price" class="quickview-price"></div>
+      <div class="quickview-actions">
+        <button id="quickview-add" class="button" data-add-to-cart>ADD TO CART</button>
+      </div>
+    </div>
+  </div>
+</div>

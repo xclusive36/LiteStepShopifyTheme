@@ -1,3 +1,18 @@
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="site-logo">
+      <a href="/">{{ shop.name }}</a>
+    </div>
+    <div class="site-nav">
+      <!-- ...existing nav... -->
+    </div>
+    <div class="site-cart">
+      <button aria-label="Open cart" id="cart-toggle">Cart <span data-cart-count>0</span></button>
+    </div>
+  </div>
+  {% comment %} include the cart drawer snippet so it's available on all pages {% endcomment %}
+  {% render 'cart-drawer' %}
+</header>
 {% schema %}
 {
   "name": "Header",

@@ -1,3 +1,26 @@
+<section class="product-section">
+  <div class="container">
+    {% if product %}
+      <div class="product-main">
+        <div class="product-gallery">
+          {% if product.featured_image %}
+            <img src="{{ product.featured_image | img_url: '800x' }}" alt="{{ product.title }}">
+          {% endif %}
+        </div>
+        <div class="product-summary">
+          <h1>{{ product.title }}</h1>
+          <div class="product-price">{{ product.price | money }}</div>
+          <form action="/cart/add" method="post" class="product-form">
+            <button type="submit" class="button">Add to cart</button>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      <p>No product available.</p>
+    {% endif %}
+  </div>
+  {% render 'quickview-modal' %}
+</section>
 <section id="product-section" class="product-section">
   <div class="product-grid">
     <div class="product-media">
