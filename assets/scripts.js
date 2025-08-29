@@ -5,11 +5,29 @@ document.addEventListener('DOMContentLoaded',function(){
   function openModal(){
     const modal = document.getElementById('quickview-modal');
     modal.setAttribute('aria-hidden','false');
+  // focus management: save active element and move focus into modal
+  modal.__previousActive = document.activeElement;
+  const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if(focusable) focusable.focus();
+  // trap focus
+  document.addEventListener('focus', trapFocus, true);
   }
 
   function closeModal(){
     const modal = document.getElementById('quickview-modal');
     modal.setAttribute('aria-hidden','true');
+    // restore focus
+    if(modal.__previousActive) modal.__previousActive.focus();
+    document.removeEventListener('focus', trapFocus, true);
+  }
+
+  function trapFocus(e){
+    const modal = document.getElementById('quickview-modal');
+    if(!modal || modal.getAttribute('aria-hidden') === 'true') return;
+    if(!modal.contains(e.target)){
+      e.stopPropagation();
+      modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])').focus();
+    }
   }
 
   document.body.addEventListener('click',function(e){
