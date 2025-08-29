@@ -30,54 +30,84 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   }
 
+  // helper to populate quickview modal from a product object
+  function populateQuickview(product, handle){
+    // populate modal fields
+    document.getElementById('quickview-title').textContent = product.title;
+    document.getElementById('quickview-price').textContent = (product.price/100).toFixed(2);
+    document.getElementById('quickview-description').innerHTML = product.description || '';
+
+    // media
+    const media = document.getElementById('quickview-media');
+    media.innerHTML = '';
+    if(product.images && product.images.length){
+  // preload images for smoother carousel
+  product.images.forEach(src=>{ const im = new Image(); im.src = src; });
+      let index = 0;
+      const showImage = (i)=>{
+        media.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = product.images[i];
+        img.alt = product.title + ' image ' + (i+1);
+        img.loading = 'lazy';
+        img.className = 'fade-in';
+        media.appendChild(img);
+      };
+      showImage(0);
+      const prev = document.querySelector('.carousel-prev');
+      const next = document.querySelector('.carousel-next');
+      if(prev && next){
+        prev.removeAttribute('aria-hidden'); next.removeAttribute('aria-hidden');
+        prev.onclick = ()=>{ index = (index-1+product.images.length)%product.images.length; showImage(index); };
+        next.onclick = ()=>{ index = (index+1)%product.images.length; showImage(index); };
+      }
+    }
+
+    // variants
+    const variantsEl = document.getElementById('quickview-variants');
+    variantsEl.innerHTML = '';
+    if(product.variants && product.variants.length > 1){
+      const select = document.createElement('select');
+      select.id = 'quickview-variant-select';
+      product.variants.forEach(v=>{
+        const opt = document.createElement('option');
+        opt.value = v.id; opt.textContent = v.title + ' — ' + (v.price/100).toFixed(2);
+        select.appendChild(opt);
+      });
+      variantsEl.appendChild(select);
+    } else if(product.variants && product.variants.length === 1){
+      // single variant
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.id = 'quickview-variant-select'; input.value = product.variants[0].id;
+      variantsEl.appendChild(input);
+    }
+
+    // set add button data
+    const addBtn = document.getElementById('quickview-add');
+    if(addBtn){
+      addBtn.dataset.handle = handle;
+      try{ addBtn.dataset.product = JSON.stringify(product); }catch(e){ console.warn('Could not stringify product for dataset', e); }
+    }
+
+    openModal();
+  }
+
   document.body.addEventListener('click',function(e){
     if(e.target.matches('.quickview-button')){
       const handle = e.target.dataset.handle;
-      fetch(`/products/${handle}.js`).then(r=>r.json()).then(product=>{
-        // populate modal fields
-        document.getElementById('quickview-title').textContent = product.title;
-        document.getElementById('quickview-price').textContent = (product.price/100).toFixed(2);
-        document.getElementById('quickview-description').innerHTML = product.description;
-
-        // media
-        const media = document.getElementById('quickview-media');
-        media.innerHTML = '';
-        if(product.images && product.images.length){
-          const img = document.createElement('img');
-          img.src = product.images[0];
-          img.alt = product.title;
-          img.width = 600; img.height = 400; img.loading = 'eager';
-          media.appendChild(img);
-        }
-
-        // variants
-        const variantsEl = document.getElementById('quickview-variants');
-        variantsEl.innerHTML = '';
-        if(product.variants && product.variants.length > 1){
-          const select = document.createElement('select');
-          select.id = 'quickview-variant-select';
-          product.variants.forEach(v=>{
-            const opt = document.createElement('option');
-            opt.value = v.id; opt.textContent = v.title + ' — ' + (v.price/100).toFixed(2);
-            select.appendChild(opt);
-          });
-          variantsEl.appendChild(select);
-        } else if(product.variants && product.variants.length === 1){
-          // single variant
-          const input = document.createElement('input');
-          input.type = 'hidden'; input.id = 'quickview-variant-select'; input.value = product.variants[0].id;
-          variantsEl.appendChild(input);
-        }
-
-        // set add button data
-        const addBtn = document.getElementById('quickview-add');
-        addBtn.dataset.handle = handle;
-        addBtn.dataset.product = JSON.stringify(product);
-
-        openModal();
+      // Try fetching real product JSON, otherwise fallback to demo JSON in assets
+      fetch(`/products/${handle}.js`).then(r=>{
+        if(!r.ok) throw new Error('Product fetch failed');
+        return r.json();
+      }).then(product=>{
+        populateQuickview(product, handle);
       }).catch(err=>{
-        console.error(err);
-        alert('Could not load product');
+        // fallback to demo products bundled with the theme for preview
+        fetch('/assets/demo-products.json').then(r=>r.json()).then(j=>{
+          const prod = (j && j.products) ? j.products.find(p=>p.handle === handle) : null;
+          if(prod) populateQuickview(prod, handle);
+          else { console.error(err); alert('Could not load product'); }
+        }).catch(e=>{ console.error(e); alert('Could not load product'); });
       });
     }
     if(e.target.matches('.modal-close')) closeModal();
@@ -140,6 +170,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!cart || !cart.items || cart.items.length===0){
       container.innerHTML = '<p>Your cart is empty</p>';
       document.getElementById('cart-subtotal').textContent = '';
+  const announcer = document.getElementById('cart-announcer'); if(announcer) announcer.textContent = 'Your cart is empty.';
       return;
     }
     container.innerHTML = '';
@@ -150,6 +181,7 @@ document.addEventListener('DOMContentLoaded',function(){
       container.appendChild(row);
     });
     document.getElementById('cart-subtotal').textContent = 'Subtotal: $' + (cart.total_price/100).toFixed(2);
+  const announcer = document.getElementById('cart-announcer'); if(announcer) announcer.textContent = cart.items.length + ' items in cart. Subtotal ' + (cart.total_price/100).toFixed(2);
   }
 
   function refreshCartDrawer(){
