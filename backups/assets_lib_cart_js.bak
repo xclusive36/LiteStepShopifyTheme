@@ -1,0 +1,14 @@
+// Backup of assets/lib/cart.js
+// Original contents preserved here before removal from theme assets.
+
+var backup_cart_js = `// Deprecated placeholder: cart implementation moved to \`assets/cart.js\`.
+(function(){
+  var impl = { deprecated: true, message: 'Use assets/cart.js instead of assets/lib/cart.js' };
+  if (typeof module !== 'undefined' && module.exports) module.exports = impl;
+  if (typeof window !== 'undefined') { window.LiteStep = window.LiteStep || {}; Object.assign(window.LiteStep, impl); }
+})();`;
+
+module.exports = backup_cart_js;
+// Backup of assets/lib/cart.js.bak
+
+// see assets/lib/cart.js.bak
