@@ -1,3 +1,166 @@
+// Minimal quickview runtime: delegated handlers to open a quickview modal,
+// populate it from /products/<handle>.js and attempt an AJAX add-to-cart.
+// Designed to be resilient for live preview and deterministic test fallback.
+(function () {
+  'use strict';
+
+
+
+  function showModal(modal) {
+    if (!modal) return;
+    modal.style.display = '';
+    modal.setAttribute('aria-hidden', 'false');
+    // focus first actionable element
+    const close = modal.querySelector('.quickview-close');
+    if (close) close.focus();
+  }
+
+  function hideModal(modal) {
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  async function fetchProduct(handle, base) {
+    base = base || '';
+    const url = (base.replace(/\/$/, '') || '') + `/products/${encodeURIComponent(handle)}.js`;
+    try {
+      const res = await fetch(url, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('product fetch failed');
+      return await res.json();
+    } catch (err) {
+      console.debug('quickview: fetchProduct error', err);
+      return null;
+    }
+  }
+
+  function renderProductIntoQuickview(product, modal) {
+    if (!product || !modal) return;
+    const title = modal.querySelector('#quickview-title');
+    const price = modal.querySelector('#quickview-price');
+    const media = modal.querySelector('#quickview-media');
+    const addBtn = modal.querySelector('#quickview-add');
+
+    if (title) title.textContent = product.title || '';
+    if (price) {
+      const p = (product.price != null) ? (product.price / 100).toFixed(2) : '';
+      price.textContent = p ? `$${p}` : '';
+    }
+
+    if (media) {
+      // prefer featured_image
+      const img = product?.featured_image || product?.images?.[0] || null;
+      if (img) {
+        media.innerHTML = `<img src="${img}" alt="${product.title || ''}" loading="lazy" style="max-width:100%;height:auto;"/>`;
+      } else {
+        media.innerHTML = '';
+      }
+    }
+
+    if (addBtn) {
+      // store the first variant id for add-to-cart
+      const v = (product.variants && product.variants[0]) || null;
+      if (v) addBtn.dataset.variantId = String(v.id);
+    }
+  }
+
+  async function addToCart(variantId, qty) {
+    qty = qty || 1;
+    try {
+      const res = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: Number(variantId), quantity: Number(qty) }),
+        credentials: 'same-origin',
+      });
+      if (!res.ok) throw new Error('add-to-cart failed');
+      const json = await res.json();
+      // emit a global event to allow other scripts to update cart UI
+      window.dispatchEvent(new CustomEvent('quickview:cart-added', { detail: json }));
+      return json;
+    } catch (err) {
+      console.debug('quickview: addToCart error', err);
+      // Best-effort fallback: update [data-cart-count] if present
+      try {
+        const el = document.querySelector('[data-cart-count]');
+        if (el) {
+          const prev = Number(el.textContent || el.getAttribute('data-count') || 0) || 0;
+          const next = prev + Number(qty || 1);
+          el.textContent = String(next);
+          el.setAttribute('data-count', String(next));
+          window.dispatchEvent(new CustomEvent('quickview:cart-mock', { detail: { count: next } }));
+        }
+      } catch (e) {
+        console.debug('quickview: fallback update failed', e);
+      }
+      return null;
+    }
+  }
+
+  // Delegated click handler to open quickview
+  function delegatedClickHandler(e) {
+    const btn = e.target.closest('[data-handle], .quickview-button');
+    if (!btn) return;
+    e.preventDefault();
+    const handle = btn.dataset.handle || btn.getAttribute('data-handle');
+    if (!handle) return;
+    const modal = document.getElementById('quickview-modal');
+    (async function () {
+      const product = await fetchProduct(handle);
+      renderProductIntoQuickview(product, modal);
+      showModal(modal);
+    }());
+  }
+
+  function wireModalHandlers() {
+    const modal = document.getElementById('quickview-modal');
+    if (!modal) return;
+
+    modal.addEventListener('click', function (ev) {
+      // close when clicking backdrop or close button
+      if (ev.target.matches('.quickview-close') || ev.target === modal) {
+        hideModal(modal);
+      }
+    });
+
+    const addBtn = modal.querySelector('#quickview-add');
+    if (addBtn) {
+      addBtn.addEventListener('click', async function (ev) {
+        ev.preventDefault();
+        const variantId = addBtn.dataset.variantId || addBtn.getAttribute('data-variant-id');
+        if (!variantId) return;
+        await addToCart(variantId, 1);
+        // close after add
+        hideModal(modal);
+      });
+    }
+
+    // close on escape
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') hideModal(modal);
+    });
+  }
+
+  function init() {
+    document.addEventListener('click', delegatedClickHandler);
+    wireModalHandlers();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Expose for tests/debugging
+  window.__quickview = {
+    fetchProduct: fetchProduct,
+    addToCart: addToCart,
+    showModal: showModal,
+    hideModal: hideModal,
+  };
+
+})();
 (function(root, factory){
   if(typeof module !== 'undefined' && module.exports){
     module.exports = factory();
