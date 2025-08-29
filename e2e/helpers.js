@@ -1,6 +1,18 @@
-async function ensureStorefront(page, base) {
-  const url = process.env.PREVIEW_URL || base || 'http://127.0.0.1:9292';
+/*
+ * Merged E2E helpers for Playwright tests.
+ * Exports:
+ *  - ensureStorefront(page, base)
+ *  - findQuickviewTrigger(page)
+ *  - openQuickviewForHandle(page, handle, base)
+ *  - discoverProductHandle(page, base)
+ *  - performMockFallback(page, base)
+ */
+
+const DEFAULT_BASE = process.env.PREVIEW_URL || 'http://127.0.0.1:9292';
+
+async function ensureStorefront(page, base = DEFAULT_BASE) {
   try {
+    const url = base;
     const res = await page.goto(url, { waitUntil: 'load', timeout: 15000 });
     return res && res.status && res.status() < 400;
   } catch (err) {
@@ -9,64 +21,59 @@ async function ensureStorefront(page, base) {
 }
 
 async function findQuickviewTrigger(page) {
-  // robust selector: data attribute preferred, then buttons/links with Quick view text
   const selectors = [
-  '[data-quickview-trigger]','[data-open-quickview]','[data-quickview]','[data-action="quickview"]',
-  'button[aria-controls="quickview-modal"]','button.quickview-button','button.quick-view','a.quickview','a.quick-view',
-  'button[title*="Quick"]','a[title*="Quick"]',
-  'button:has-text("Quick view")','a:has-text("Quick view")',
-  // additional product-card / link patterns
-  'a[href*="/products/"] .product-card__image',
-  'a[href*="/products/"] .product-card__media',
-  'a.product-card__link',
-  '.product-card__image',
-  '.product-card__media',
-  '.product-card .card__image',
-  '.product-card .product-card__image',
-  '.product__quickview',
-  '.product-item .quickview',
-  '.product-item .quick-view',
-  '.product-item a:has-text("Quick view")'
+    '[data-quickview-trigger]','[data-open-quickview]','[data-quickview]','[data-action="quickview"]',
+    'button[aria-controls="quickview-modal"]','button.quickview-button','button.quick-view','a.quickview','a.quick-view',
+    'button[title*="Quick"]','a[title*="Quick"]',
+    'button:has-text("Quick view")','a:has-text("Quick view")',
+    'a[href*="/products/"] .product-card__image',
+    'a[href*="/products/"] .product-card__media',
+    'a.product-card__link',
+    '.product-card__image',
+    '.product-card__media',
+    '.product-card .card__image',
+    '.product-card .product-card__image',
+    '.product__quickview',
+    '.product-item .quickview',
+    '.product-item .quick-view',
+    '.product-item a:has-text("Quick view")'
   ];
 
   const combined = selectors.join(',');
   try {
-    // wait for any of the common selectors to appear
     await page.waitForSelector(combined, { timeout: 5000 });
     const el = await page.$(combined);
     if (el) return el;
   } catch (err) {
-    // fall through to finer-grained checks
+  console.debug('findQuickviewTrigger: primary wait failed', err && err.message);
   }
 
-  // try each selector quickly
   for (const sel of selectors) {
-    const el = await page.$(sel);
-    if (el) return el;
+    try {
+      const el = await page.$(sel);
+      if (el) return el;
+    } catch (e) {
+  console.debug('findQuickviewTrigger: selector check failed', e && e.message);
+    }
   }
 
-  // last-resort fallback: look for product-card buttons/links
-  // give client JS a moment to render dynamic buttons
+  // last-resort fallback: clickable product link
   await page.waitForTimeout(300);
   const fallback = await page.$('.product-card .quickview-button, .product-card button, .product-card a, .quickview-button, .add-to-cart-button');
   if (fallback) return fallback;
-  // final fallback: clickable product link (many themes open quickview from product anchors)
   const productLink = await page.$('a[href*="/products/"]');
   return productLink;
 }
 
-module.exports = { ensureStorefront, findQuickviewTrigger };
-
 // Try to populate and open the theme's quickview modal using product JSON (Shopify's /products/:handle.js)
-async function openQuickviewForHandle(page, handle, base = 'http://127.0.0.1:9292') {
+async function openQuickviewForHandle(page, handle, base = DEFAULT_BASE) {
   if (!handle) return null;
   try {
     const url = handle.startsWith('http') ? handle : new URL(`/products/${handle}.js`, base).toString();
     const res = await page.request.get(url, { timeout: 5000 });
-    if (!res.ok()) return null;
+    if (!res || !res.ok()) return null;
     const prod = await res.json();
 
-    // inject minimal product info into #quickview-modal and open it
     await page.evaluate((p) => {
       const modal = document.querySelector('#quickview-modal');
       if (!modal) return false;
@@ -76,15 +83,12 @@ async function openQuickviewForHandle(page, handle, base = 'http://127.0.0.1:929
       const addBtn = modal.querySelector('#quickview-add') || modal.querySelector('[data-add-to-cart]');
 
       if (titleEl) titleEl.textContent = p.title || p.handle || '';
-      // try to show a human price if available
       try {
         if (p.variants && p.variants[0] && p.variants[0].price) {
           const price = (typeof p.variants[0].price === 'number') ? (p.variants[0].price/100) : p.variants[0].price;
           if (priceEl) priceEl.textContent = `$${price}`;
         }
-      } catch (e) {
-        // ignore price parsing errors
-      }
+      } catch (e) { console.debug('openQuickviewForHandle: price formatting error', e && e.message); }
 
       if (mediaEl) {
         mediaEl.innerHTML = '';
@@ -102,12 +106,9 @@ async function openQuickviewForHandle(page, handle, base = 'http://127.0.0.1:929
           addBtn.setAttribute('data-add-to-cart', 'true');
           addBtn.dataset.productId = p.id || '';
           if (p.variants && p.variants[0]) addBtn.dataset.variantId = p.variants[0].id || '';
-        } catch (e) {
-          // ignore dataset assignment errors
-        }
+        } catch (e) { console.debug('openQuickviewForHandle: add button attribute set failed', e && e.message); }
       }
 
-      // Open the modal in a simple, robust way
       modal.setAttribute('aria-hidden', 'false');
       modal.classList.add('open');
       modal.style.display = '';
@@ -117,7 +118,6 @@ async function openQuickviewForHandle(page, handle, base = 'http://127.0.0.1:929
       return true;
     }, prod);
 
-    // return the add-to-cart element inside the quickview modal if present
     const add = await page.$('#quickview-modal [data-add-to-cart], #quickview-modal #quickview-add');
     return add;
   } catch (err) {
@@ -125,10 +125,8 @@ async function openQuickviewForHandle(page, handle, base = 'http://127.0.0.1:929
   }
 }
 
-module.exports.openQuickviewForHandle = openQuickviewForHandle;
-
 // Try to discover any product handle on the storefront using multiple strategies
-async function discoverProductHandle(page, base = 'http://127.0.0.1:9292') {
+async function discoverProductHandle(page, base = DEFAULT_BASE) {
   // 1) env override (if set in CI/tests)
   if (process.env.PREVIEW_PRODUCT) {
     try {
@@ -136,9 +134,7 @@ async function discoverProductHandle(page, base = 'http://127.0.0.1:9292') {
       const parts = u.pathname.split('/').filter(Boolean);
       const idx = parts.indexOf('products');
       if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1];
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) { console.debug('discoverProductHandle: PREVIEW_PRODUCT parse failed', e && e.message); }
   }
 
   // 2) LD+JSON product data on the page
@@ -148,36 +144,29 @@ async function discoverProductHandle(page, base = 'http://127.0.0.1:9292') {
       try {
         const obj = JSON.parse(j);
         if (obj && obj['@type'] === 'Product' && obj.url) {
-          const u = new URL(obj.url, window.location.origin);
+          const u = new URL(obj.url, page.url());
           const parts = u.pathname.split('/').filter(Boolean);
           const idx = parts.indexOf('products');
           if (idx >= 0 && parts.length > idx + 1) return parts[idx + 1];
         }
-      } catch (e) {
-        // ignore
-      }
+  } catch (e) { console.debug('discoverProductHandle: ld+json item parse failed', e && e.message); }
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { console.debug('discoverProductHandle: ld+json parse failed', e && e.message); }
 
   // 3) /products.json (Shopify often exposes this; try it)
   try {
     const pjsonUrl = new URL('/products.json', base).toString();
     const r = await page.request.get(pjsonUrl, { timeout: 5000 });
-    if (r.ok()) {
+    if (r && r.ok()) {
       const body = await r.json();
       if (body && body.products && body.products.length) return body.products[0].handle;
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { console.debug('discoverProductHandle: products.json fetch failed', e && e.message); }
 
   // 3.5) If the page exposes Shopify.shop, try the shop's sitemap_products_1.xml
   try {
     const shopDomain = await page.evaluate(() => (window.Shopify && window.Shopify.shop) || null);
     if (shopDomain) {
-      // try common sitemap endpoints (sitemap_products_1.xml first, then sitemap.xml)
       const sitemapCandidates = [
         `https://${shopDomain}/sitemap_products_1.xml`,
         `https://${shopDomain}/sitemap.xml`
@@ -185,43 +174,33 @@ async function discoverProductHandle(page, base = 'http://127.0.0.1:9292') {
       for (const sitemapUrl of sitemapCandidates) {
         try {
           const r3 = await page.request.get(sitemapUrl, { timeout: 5000 }).catch(() => null);
-          if (!r3 || !r3.ok || !r3.ok()) continue;
+          if (!r3 || !r3.ok()) continue;
           const txt = await r3.text();
-          // look for the first products entry
-          // matches either <loc>.../products/handle</loc> or multiple product locations in sitemap.xml
-          const re = /<loc>[^<]*\/products\/([^<\/\s]+)\/?<\/loc>/ig;
+          const re = new RegExp('<loc>[^<]*/products/([^<\\s]+)/?</loc>', 'ig');
           const m = re.exec(txt);
           if (m && m[1]) return m[1];
-        } catch (e) {
-          // ignore and try next candidate
-        }
+  } catch (e) { console.debug('discoverProductHandle: sitemap parse failed', e && e.message); }
       }
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { console.debug('discoverProductHandle: Shopify.shop sitemap check failed', e && e.message); }
 
   // 4) Try fetching /collections/all and parse first product href heuristically
   try {
     const collUrl = new URL('/collections/all', base).toString();
     const r2 = await page.request.get(collUrl, { timeout: 5000 });
-    if (r2.ok()) {
+    if (r2 && r2.ok()) {
       const txt = await r2.text();
-  const m = txt.match(new RegExp("href=['\"]([^'\"]*/products/([^'\"/]+))['\"]", 'i'));
+    const m = txt.match(new RegExp("href=['\"]([^'\"]*/products/([^'\"/]+))['\"]", 'i'));
       if (m && m[2]) return m[2];
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { console.debug('discoverProductHandle: collections/all fetch failed', e && e.message); }
 
   return null;
 }
 
-module.exports.discoverProductHandle = discoverProductHandle;
-
 // Perform an ephemeral mock-product fallback: inject quickview modal and attempt deterministic cart add.
 // Returns true if mock flow completed (POST succeeded or UI simulated), false otherwise.
-async function performMockFallback(page, base = 'http://127.0.0.1:9292') {
+async function performMockFallback(page, base = DEFAULT_BASE) {
   try {
     await page.evaluate(() => {
       let modal = document.querySelector('#quickview-modal');
@@ -259,7 +238,7 @@ async function performMockFallback(page, base = 'http://127.0.0.1:9292') {
       headers: { 'Accept': 'application/json' }
     }).catch(() => null);
 
-    if (cartRes && cartRes.ok && cartRes.ok()) {
+  if (cartRes && cartRes.ok && cartRes.ok()) {
       await page.waitForTimeout(400);
       await page.waitForFunction(() => {
         const el = document.querySelector('[data-cart-count]');
@@ -271,7 +250,7 @@ async function performMockFallback(page, base = 'http://127.0.0.1:9292') {
       return true;
     }
 
-    // If POST fails, simulate cart UI update so tests can proceed deterministically
+  // If POST fails, simulate cart UI update so tests can proceed deterministically
     await page.evaluate(() => {
       let el = document.querySelector('[data-cart-count]');
       if (!el) {
@@ -286,8 +265,15 @@ async function performMockFallback(page, base = 'http://127.0.0.1:9292') {
     });
     return true;
   } catch (e) {
-    return false;
+  console.debug('performMockFallback: failed', e && e.message);
+  return false;
   }
 }
 
-module.exports.performMockFallback = performMockFallback;
+module.exports = {
+  ensureStorefront,
+  findQuickviewTrigger,
+  openQuickviewForHandle,
+  discoverProductHandle,
+  performMockFallback
+};

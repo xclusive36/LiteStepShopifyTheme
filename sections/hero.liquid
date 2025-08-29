@@ -1,4 +1,13 @@
-{% schema %}
+<section id="hero" class="hero">
+  <div class="hero-inner">
+    <h1>{{ section.settings.heading }}</h1>
+    <p>{{ section.settings.subheading }}</p>
+    {% if section.settings.cta_label != blank and section.settings.cta_url != blank %}
+      <a class="btn" href="{{ section.settings.cta_url }}">{{ section.settings.cta_label }}</a>
+    {% endif %}
+  </div>
+
+  {% schema %}
 {
   "name": "Hero",
   "settings": [
@@ -11,13 +20,23 @@
       "type": "text",
       "id": "heading",
       "label": "Heading",
-      "default": "Welcome to LiteStep"
+      "default": "LiteStep — fast, accessible themes"
     },
     {
       "type": "text",
       "id": "subheading",
       "label": "Subheading",
-      "default": "Fast. Flexible. Ready."
+      "default": "A lightweight Shopify starter theme with accessible quickview and cart"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA label"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "CTA url"
     }
   ],
   "blocks": [],
@@ -28,13 +47,3 @@
   ]
 }
 {% endschema %}
-
-<section class="hero">
-  {% if section.settings.image %}
-    <img src="{{ section.settings.image | image_url }}" alt="{{ section.settings.heading | escape }}" width="1400" height="600" loading="eager" />
-  {% endif %}
-  <div class="hero-content">
-    <h1>{{ section.settings.heading }}</h1>
-    <p>{{ section.settings.subheading }}</p>
-  </div>
-</section>

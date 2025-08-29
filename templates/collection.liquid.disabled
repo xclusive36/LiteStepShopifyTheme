@@ -1,0 +1,2 @@
+{% comment %} This file is intentionally disabled. Use templates/collection.json (OS2 JSON template) instead. {% endcomment %}
+{% comment %} Deprecated: collection.json (OS2 JSON template) is primary. This file is disabled. {% endcomment %}

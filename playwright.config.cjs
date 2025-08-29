@@ -5,15 +5,15 @@ const config = {
     headless: true,
     viewport: { width: 1280, height: 720 },
     ignoreHTTPSErrors: true,
-    video: 'retain-on-failure',
+    video: 'retain-on-failure'
   },
   projects: [
     {
       name: 'chromium',
-      use: { browserName: 'chromium' },
-    },
+      use: { browserName: 'chromium' }
+    }
   ],
-  testDir: './e2e',
+  testDir: './e2e'
 };
 
 module.exports = config;
